@@ -42,7 +42,7 @@ const navItems = [
   { label: "Docs", href: "#docs" },
 ];
 
-const gettingStartedDownload = "/manus-storage/CDCS-for-us-locallevel_f27cfbfe.zip";
+const gettingStartedDownload = "/CDCS-local.zip";
 const krishLinkedIn = "https://www.linkedin.com/in/krish-bhattad-2925a5386?utm_source=share_via&utm_content=profile&utm_medium=member_android";
 const omishaLinkedIn = "https://www.linkedin.com/in/omisha-iyer-17a78a397?utm_source=share_via&utm_content=profile&utm_medium=member_android";
 
@@ -133,15 +133,15 @@ const metrics: Metric[] = [
 
 const dashboardImages = [
   {
-    src: "/manus-storage/Screenshot2026-09-26030526_370d00de.png",
+    src: "/dashboard-1.png",
     alt: "CDCS Cluster Dashboard showing Raft control plane nodes and metrics",
   },
   {
-    src: "/manus-storage/Screenshot2026-09-26030542_18a5d09c.png",
+    src: "/dashboard-2.png",
     alt: "CDCS dashboard showing the Live 2Q Cache Inspector and stored files",
   },
   {
-    src: "/manus-storage/Screenshot2026-09-26030559_21cd28c7.png",
+    src: "/dashboard-3.png",
     alt: "CDCS dashboard showing physical storage plane status and consensus log ledger",
   },
 ];
