@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cdcs-website.vercel.app/sitemap.xml
