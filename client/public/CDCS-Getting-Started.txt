@@ -1,5 +1,0 @@
-CDCS — Consistent Distributed Cache System
-
-Getting started guide placeholder.
-
-The final downloadable setup file will be added here.
