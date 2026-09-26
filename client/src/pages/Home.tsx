@@ -43,7 +43,7 @@ const navItems = [
   { label: "Docs", href: "#docs" },
 ];
 
-const gettingStartedDownload = "/CDCS-local.zip";
+const gettingStartedDownload = "/CDCS.zip";
 const krishLinkedIn = "https://www.linkedin.com/in/krish-bhattad-2925a5386?utm_source=share_via&utm_content=profile&utm_medium=member_android";
 const omishaLinkedIn = "https://www.linkedin.com/in/omisha-iyer-17a78a397?utm_source=share_via&utm_content=profile&utm_medium=member_android";
 
@@ -233,7 +233,7 @@ function Home() {
             ))}
           </nav>
 
-          <a className="button button-primary nav-cta" href={gettingStartedDownload} download="CDCS(local).zip">
+          <a className="button button-primary nav-cta" href={gettingStartedDownload} download="CDCS.zip">
             Get Started <ArrowUpRight size={16} strokeWidth={2.2} />
           </a>
 
@@ -260,7 +260,7 @@ function Home() {
               <ArrowUpRight size={15} />
             </a>
           ))}
-          <a className="button button-primary mobile-cta" href={gettingStartedDownload} download="CDCS(local).zip" onClick={() => setMobileOpen(false)}>
+          <a className="button button-primary mobile-cta" href={gettingStartedDownload} download="CDCS.zip" onClick={() => setMobileOpen(false)}>
             Get Started <ArrowUpRight size={16} />
           </a>
         </div>
@@ -437,7 +437,7 @@ function Home() {
                   From quick start guides to full API references - architecture deep-dives, configuration options, and everything needed to run CDCS in production.
                 </p>
               </div>
-              <a className="button button-primary docs-button" href="#docs">
+              <a className="button button-primary docs-button" href="https://github.com/krishbhattad/CDCS-website-/blob/main/README.md" target="_blank" rel="noreferrer">
                 Continue Reading <ArrowRight size={17} />
               </a>
             </div>
