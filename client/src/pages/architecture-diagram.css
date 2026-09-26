@@ -12,6 +12,19 @@
   font-family: "JetBrains Mono", "Trebuchet MS", monospace;
 }
 
+@media (max-width: 720px) {
+  .arch-diagram-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .arch-diagram-svg {
+    width: 900px;
+    max-width: none;
+    flex-shrink: 0;
+  }
+}
+
 .arch-zone {
   fill: var(--secondary);
   stroke: var(--line);
