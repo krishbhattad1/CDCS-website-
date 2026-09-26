@@ -1,233 +1,505 @@
-import "./architecture-diagram.css";
+import { useEffect, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  Database,
+  Github,
+  Layers3,
+  Linkedin,
+  Mail,
+  Menu,
+  Network,
+  ShieldCheck,
+  X,
+  Zap,
+} from "lucide-react";
+import ArchitectureDiagram from "./ArchitectureDiagram";
 
-/**
- * Live animated architecture diagram for CDCS.
- * Drop <ArchitectureDiagram /> inside the #architecture-diagram container in Home.tsx.
- *
- * The "live" effect is done entirely with native SVG <animate>/<animateMotion> loops
- * (a traveling dot per edge), so it runs continuously without any React state/interval —
- * no re-renders, no jitter, no hover interaction.
- */
-
-type NodeDef = {
-  id: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+type Feature = {
+  number: string;
   title: string;
-  subtitle: string;
-  group: "client" | "control" | "backend" | "storage" | "consensus";
+  body: string;
+  tag: string;
+  icon: typeof ShieldCheck;
 };
 
-type EdgeDef = {
-  from: string;
-  to: string;
-  label?: string;
-  dashed?: boolean;
-  bidirectional?: boolean;
+type Metric = {
+  stat: string;
+  label: string;
+  context: string;
+  measured?: boolean;
 };
 
-const nodes: NodeDef[] = [
-  { id: "dashboard", x: 40, y: 40, w: 200, h: 60, title: "Dashboard", subtitle: "Browser dashboard UI", group: "client" },
-
-  { id: "main", x: 40, y: 150, w: 200, h: 60, title: "Main", subtitle: "Boots backend + nodes", group: "control" },
-
-  { id: "backend", x: 470, y: 150, w: 200, h: 60, title: "Backend", subtitle: "HTTP handling", group: "backend" },
-  { id: "cdcs", x: 740, y: 150, w: 200, h: 60, title: "CDCS Client", subtitle: "gRPC client", group: "backend" },
-  { id: "proto", x: 740, y: 40, w: 200, h: 60, title: "Proto", subtitle: "gRPC service contract", group: "backend" },
-
-  { id: "raft", x: 780, y: 340, w: 210, h: 60, title: "Raft", subtitle: "Raft consensus", group: "consensus" },
-  { id: "reedsolomon", x: 490, y: 340, w: 230, h: 60, title: "Reed-Solomon", subtitle: "Encode / reconstruct 4+2", group: "consensus" },
-  { id: "cs", x: 490, y: 450, w: 230, h: 68, title: "Singleflight", subtitle: "First 4 of 6 shards win", group: "consensus" },
-
-  { id: "nodesgo", x: 40, y: 340, w: 200, h: 60, title: "Nodes", subtitle: "Storage nodes (×8)", group: "storage" },
-  { id: "server", x: 40, y: 450, w: 200, h: 60, title: "Server", subtitle: "Get / Put / Delete", group: "storage" },
-  { id: "engine", x: 40, y: 560, w: 200, h: 60, title: "PebbleDB", subtitle: "2Q cache + disk storage", group: "storage" },
+const navItems = [
+  { label: "Product", href: "#what-is-cdcs" },
+  { label: "Features", href: "#features" },
+  { label: "Performance", href: "#performance" },
+  { label: "Dashboard", href: "#dashboard" },
+  { label: "Docs", href: "#docs" },
 ];
 
-const edges: EdgeDef[] = [
-  { from: "dashboard", to: "main" },
-  { from: "main", to: "backend" },
-  { from: "main", to: "nodesgo" },
-  { from: "backend", to: "cdcs" },
-  { from: "cdcs", to: "proto" },
-  { from: "cdcs", to: "reedsolomon" },
-  { from: "reedsolomon", to: "raft" },
-  { from: "reedsolomon", to: "cs" },
-  { from: "cs", to: "server", label: "gRPC · Get/Put/Delete", bidirectional: true },
-  { from: "nodesgo", to: "server" },
-  { from: "server", to: "engine" },
+const gettingStartedDownload = "/CDCS-local.zip";
+const krishLinkedIn = "https://www.linkedin.com/in/krish-bhattad-2925a5386?utm_source=share_via&utm_content=profile&utm_medium=member_android";
+const omishaLinkedIn = "https://www.linkedin.com/in/omisha-iyer-17a78a397?utm_source=share_via&utm_content=profile&utm_medium=member_android";
+
+const features: Feature[] = [
+  {
+    number: "01",
+    title: "Raft Consensus",
+    body: "5 active + 2 standby nodes maintain odd quorum. Every write is agreed upon before it's committed -no split-brain, ever.",
+    tag: "hashicorp/raft",
+    icon: ShieldCheck,
+  },
+  {
+    number: "02",
+    title: "Reed-Solomon Erasure Coding",
+    body: "Data is split into 4 data + 2 parity shards with checksum verification, surviving node failures without full replication overhead.",
+    tag: "4+2 shards",
+    icon: Layers3,
+  },
+  {
+    number: "03",
+    title: "PebbleDB + 2Q Eviction",
+    body: "Disk-backed storage per node with a 2Q eviction policy, migrated from BadgerDB for lower read latency.",
+    tag: "PebbleDB",
+    icon: Database,
+  },
+  {
+    number: "04",
+    title: "gRPC with Leader-Following",
+    body: "Clients automatically follow the Raft leader via NOT_LEADER hints, with retry with backoff baked in.",
+    tag: "gRPC",
+    icon: Network,
+  },
+  {
+    number: "05",
+    title: "Singleflight + TTL",
+    body: "A custom hybrid cache with sharding, TTL jitter, retry-with-backoff, negative caching, and circuit breaking -collapses duplicate requests into one, preventing cache stampedes under load.",
+    tag: "singleflight",
+    icon: Zap,
+  },
 ];
 
-const groupColor: Record<NodeDef["group"], string> = {
-  client: "var(--signal-blue)",
-  control: "#7c5cff",
-  backend: "#1fae6a",
-  consensus: "var(--coral)",
-  storage: "#e08a1e",
-};
+const metrics: Metric[] = [
+  {
+    stat: "5-node",
+    label: "Raft Quorum",
+    context: "Odd quorum ensures no split-brain, ever.",
+  },
+  {
+    stat: "4+2",
+    label: "Erasure Coding",
+    context: "Survives up to 2 node failures without data loss.",
+  },
+  {
+    stat: "0",
+    label: "Single Points of Failure",
+    context: "Automatic leader failover, always available.",
+  },
+  {
+    stat: "2",
+    label: "Staleness Policies",
+    context: "StrictNoStale or ToleratesStale - tuned per key.",
+  },
+  {
+    stat: "Xms",
+    label: "Read Latency (P99)",
+    context: "Under [load condition/test setup]",
+    measured: true,
+  },
+  {
+    stat: "ops/sec",
+    label: "Throughput",
+    context: "Sustained under [test setup]",
+    measured: true,
+  },
+  {
+    stat: "—",
+    label: "Leader Election Time",
+    context: "Time to recover from leader failure",
+    measured: true,
+  },
+  {
+    stat: "—",
+    label: "Cache Hit Ratio",
+    context: "Under stampede/singleflight test conditions",
+    measured: true,
+  },
+];
 
-function center(n: NodeDef) {
-  return { x: n.x + n.w / 2, y: n.y + n.h / 2 };
-}
+const dashboardImages = [
+  {
+    src: "/dashboard-1.png",
+    alt: "CDCS Cluster Dashboard showing Raft control plane nodes and metrics",
+  },
+  {
+    src: "/dashboard-2.png",
+    alt: "CDCS dashboard showing the Live 2Q Cache Inspector and stored files",
+  },
+  {
+    src: "/dashboard-3.png",
+    alt: "CDCS dashboard showing physical storage plane status and consensus log ledger",
+  },
+];
 
-function edgePath(a: NodeDef, b: NodeDef) {
-  const c1 = center(a);
-  const c2 = center(b);
-  const midX = (c1.x + c2.x) / 2;
-  return `M ${c1.x} ${c1.y} C ${midX} ${c1.y}, ${midX} ${c2.y}, ${c2.x} ${c2.y}`;
-}
-
-// Wraps text onto a second line by word boundary, sized to the node's actual box width
-// (monospace char-width estimate) instead of a flat guess — so it never overflows the box.
-function wrapLines(text: string, boxWidth: number, charWidth: number): string[] {
-  const maxChars = Math.max(6, Math.floor((boxWidth - 36) / charWidth));
-  if (text.length <= maxChars) return [text];
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (next.length > maxChars && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = next;
-    }
-  }
-  if (current) lines.push(current);
-  return lines.slice(0, 2);
-}
-
-const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
-
-export default function ArchitectureDiagram() {
+function SectionHeading({
+  eyebrow,
+  title,
+  children,
+  align = "left",
+}: {
+  eyebrow?: string;
+  title: string;
+  children?: React.ReactNode;
+  align?: "left" | "center";
+}) {
   return (
-    <div className="arch-diagram-wrap">
-      <svg
-        viewBox="0 0 1050 640"
-        className="arch-diagram-svg"
-        role="img"
-        aria-label="CDCS system architecture diagram"
-      >
-        <defs>
-          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-            <path d="M0 0 L10 5 L0 10 z" fill="var(--muted-copy)" />
-          </marker>
-          <filter id="soft-shadow" x="-40%" y="-40%" width="180%" height="180%">
-            <feDropShadow dx="0" dy="3" stdDeviation="5" floodColor="var(--ink)" floodOpacity="0.1" />
-          </filter>
-        </defs>
-
-        {/* group backdrops */}
-        <rect x="20" y="320" width="260" height="300" rx="16" className="arch-zone" />
-        <text x="34" y="312" className="arch-zone-label">STORAGE NODE PLANE</text>
-
-        <rect x="470" y="320" width="560" height="220" rx="16" className="arch-zone" />
-        <text x="484" y="312" className="arch-zone-label">BACKEND, CONSENSUS &amp; ENCODING</text>
-
-        {/* edges */}
-        <g>
-          {edges.map((e, idx) => {
-            const a = byId[e.from];
-            const b = byId[e.to];
-            if (!a || !b) return null;
-            const d = edgePath(a, b);
-            const dur = 2.6 + (idx % 4) * 0.4;
-            const delay = (idx % 5) * 0.5;
-            return (
-              <g key={idx}>
-                <path
-                  d={d}
-                  className={`arch-edge ${e.dashed ? "arch-edge-dashed" : ""}`}
-                  markerEnd="url(#arrow)"
-                  markerStart={e.bidirectional ? "url(#arrow)" : undefined}
-                />
-                {!e.dashed && (
-                  <circle r="3.5" className="arch-pulse-dot">
-                    <animateMotion
-                      dur={`${dur}s`}
-                      begin={`${delay}s`}
-                      repeatCount="indefinite"
-                      path={d}
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0;1;1;0"
-                      keyTimes="0;0.08;0.92;1"
-                      dur={`${dur}s`}
-                      begin={`${delay}s`}
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                )}
-                {e.label && (
-                  <text
-                    x={(center(a).x + center(b).x) / 2}
-                    y={(center(a).y + center(b).y) / 2 - (e.label.length > 15 ? 20 : 12)}
-                    className="arch-edge-label"
-                    textAnchor="middle"
-                  >
-                    {e.label}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-        </g>
-
-        {/* nodes */}
-        <g>
-          {nodes.map((n) => {
-            const titleLines = wrapLines(n.title, n.w, 7.6);
-            const subtitleLines = wrapLines(n.subtitle, n.w, 6.2);
-            const titleY = 23;
-            const subtitleStartY = titleY + titleLines.length * 15 + 3;
-            const contentBottom = subtitleStartY + (subtitleLines.length - 1) * 13 + 14;
-            const h = Math.max(n.h, contentBottom + 14);
-            return (
-              <g key={n.id} transform={`translate(${n.x}, ${n.y})`} filter="url(#soft-shadow)">
-                <rect
-                  width={n.w}
-                  height={h}
-                  rx="12"
-                  className="arch-node-rect"
-                  style={{ stroke: groupColor[n.group] }}
-                />
-                <rect width="6" height={h} rx="3" style={{ fill: groupColor[n.group] }} />
-                <text x="18" y={titleY} className="arch-node-title">
-                  {titleLines.map((line, i) => (
-                    <tspan key={i} x="18" dy={i === 0 ? 0 : 15}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-                <text x="18" y={subtitleStartY} className="arch-node-subtitle">
-                  {subtitleLines.map((line, i) => (
-                    <tspan key={i} x="18" dy={i === 0 ? 0 : 13}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-              </g>
-            );
-          })}
-        </g>
-      </svg>
-
-      <div className="arch-legend">
-        {(Object.keys(groupColor) as NodeDef["group"][]).map((g) => (
-          <span key={g} className="arch-legend-item">
-            <span className="arch-legend-dot" style={{ background: groupColor[g] }} />
-            {g === "client" && "Client"}
-            {g === "control" && "Control plane"}
-            {g === "backend" && "Backend / RPC"}
-            {g === "consensus" && "Consensus & encoding"}
-            {g === "storage" && "Storage nodes"}
-          </span>
-        ))}
-      </div>
+    <div className={`section-heading section-heading-${align}`}>
+      {eyebrow ? (
+        <p className="eyebrow">
+          <span className="eyebrow-line" />
+          {eyebrow}
+        </p>
+      ) : null}
+      <h2>{title}</h2>
+      {children ? <p className="section-subtext body-copy">{children}</p> : null}
     </div>
   );
 }
+
+function Home() {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [activeDashboard, setActiveDashboard] = useState(0);
+  const [dashboardHovered, setDashboardHovered] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 24);
+      setShowBackToTop(window.scrollY > window.innerHeight * 0.7);
+    };
+
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    const revealItems = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12 },
+    );
+    revealItems.forEach((item) => observer.observe(item));
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (dashboardHovered) return;
+    const timer = window.setInterval(() => {
+      setActiveDashboard((current) => (current + 1) % dashboardImages.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [dashboardHovered]);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  return (
+    <div className="cdcs-site">
+      <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
+        <div className="nav-shell">
+          <a className="brand" href="#product" aria-label="CDCS home">
+            <span className="brand-wordmark">CDCS</span>
+          </a>
+
+          <nav className="desktop-nav" aria-label="Primary navigation">
+            {navItems.map((item) => (
+              <a key={item.href} className="nav-link" href={item.href}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <a className="button button-primary nav-cta" href={gettingStartedDownload} download="CDCS(local).zip">
+            Get Started <ArrowUpRight size={16} strokeWidth={2.2} />
+          </a>
+
+          <button
+            className="menu-button"
+            type="button"
+            aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+
+        <div className={`mobile-nav ${mobileOpen ? "is-open" : ""}`}>
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              className="nav-link"
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+            >
+              {item.label}
+              <ArrowUpRight size={15} />
+            </a>
+          ))}
+          <a className="button button-primary mobile-cta" href={gettingStartedDownload} download="CDCS(local).zip" onClick={() => setMobileOpen(false)}>
+            Get Started <ArrowUpRight size={16} />
+          </a>
+        </div>
+      </header>
+
+      <main>
+        <section className="hero reveal is-visible" id="product">
+          <div className="hero-soft-pattern" aria-hidden="true" />
+          <div className="hero-content">
+            <h1>
+              <span>Consistent Distributed</span>
+              <span>Cache System</span>
+            </h1>
+          </div>
+        </section>
+
+        <section className="intro-section section-pad reveal" id="what-is-cdcs" data-reveal>
+          <div className="container intro-grid">
+            <div className="section-heading intro-heading">
+              <h2 className="intro-title">
+                <span>What is</span>
+                <span>CDCS?</span>
+              </h2>
+            </div>
+            <div className="intro-copy">
+              <p className="intro-lede body-copy">
+                CDCS is a Go based distributed cache that uses Raft consensus for strong consistency and Reed Solomon erasure coding for fault-tolerant storage -no stale reads, no split-brain, no single point of failure.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="features-section section-pad reveal" id="features" data-reveal>
+          <div className="container">
+            <div className="section-topline">
+              <SectionHeading
+                title="Key features / design decisions"
+              />
+            </div>
+            <div className="feature-grid">
+              {features.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <article className="feature-card" key={feature.number} tabIndex={0}>
+                    <div className="feature-card-top">
+                      <Icon className="feature-icon" size={19} strokeWidth={1.8} />
+                    </div>
+                    <h3 className="feature-title">{feature.title}</h3>
+                    <div className="feature-reveal">
+                      <p className="feature-body body-copy">{feature.body}</p>
+                      <span className="feature-tag">{feature.tag}</span>
+                    </div>
+                    <ArrowUpRight className="feature-arrow" size={17} />
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="architecture-section section-pad reveal" id="architecture" data-reveal>
+          <div className="container">
+            <div className="section-topline architecture-heading-row">
+              <SectionHeading
+                title="How It Works"
+              >
+                Built on proven distributed systems primitives, engineered for correctness.
+              </SectionHeading>
+            </div>
+            <div
+              id="architecture-diagram"
+              className="architecture-canvas"
+              aria-label="Animated CDCS architecture diagram"
+            >
+              <ArchitectureDiagram />
+            </div>
+          </div>
+        </section>
+
+        <section className="metrics-section section-pad reveal" id="performance" data-reveal>
+          <div className="container">
+            <div className="section-topline">
+              <SectionHeading
+                title="Performance & Guarantees"
+              >
+                Numbers and properties that define how CDCS behaves under load.
+              </SectionHeading>
+            </div>
+            <div className="metrics-grid">
+              {metrics.map((metric) => (
+                <article className={`metric-card ${metric.measured ? "is-measured" : ""}`} key={metric.label}>
+                  <div className="metric-card-top">
+                    <span className="metric-stat">{metric.stat}</span>
+                    {metric.measured ? <span className="metric-pending">to be measured</span> : <Check size={17} />}
+                  </div>
+                  <h3>{metric.label}</h3>
+                  <p className="metric-context body-copy">{metric.context}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="dashboard-section section-pad reveal" id="dashboard" data-reveal>
+          <div className="container">
+            <div className="section-topline">
+              <SectionHeading title="Dashboard" />
+            </div>
+            <div
+              className="dashboard-carousel"
+              onMouseEnter={() => setDashboardHovered(true)}
+              onMouseLeave={() => setDashboardHovered(false)}
+              onFocus={() => setDashboardHovered(true)}
+              onBlur={() => setDashboardHovered(false)}
+            >
+              <div className="dashboard-carousel-viewport">
+                {dashboardImages.map((image, index) => (
+                  <img
+                    key={image.src}
+                    className={`dashboard-slide-image ${index === activeDashboard ? "is-active" : ""}`}
+                    src={image.src}
+                    alt={image.alt}
+                    loading={index === 0 ? "eager" : "lazy"}
+                  />
+                ))}
+                <button
+                  className="dashboard-carousel-control dashboard-carousel-prev"
+                  type="button"
+                  aria-label="Previous dashboard image"
+                  onClick={() => setActiveDashboard((current) => (current - 1 + dashboardImages.length) % dashboardImages.length)}
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  className="dashboard-carousel-control dashboard-carousel-next"
+                  type="button"
+                  aria-label="Next dashboard image"
+                  onClick={() => setActiveDashboard((current) => (current + 1) % dashboardImages.length)}
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </div>
+              <div className="dashboard-carousel-footer">
+                <span>{String(activeDashboard + 1).padStart(2, "0")} / {String(dashboardImages.length).padStart(2, "0")}</span>
+                <div className="dashboard-carousel-dots" aria-label="Choose dashboard image">
+                  {dashboardImages.map((image, index) => (
+                    <button
+                      key={image.src}
+                      className={`dashboard-carousel-dot ${index === activeDashboard ? "is-active" : ""}`}
+                      type="button"
+                      aria-label={`Show dashboard image ${index + 1}`}
+                      aria-current={index === activeDashboard ? "true" : undefined}
+                      onClick={() => setActiveDashboard(index)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="docs-section section-pad reveal" id="docs" data-reveal>
+          <div className="container docs-container">
+            <div className="section-topline">
+              <SectionHeading title="Documentation">
+                Everything you need to get CDCS running - from quick start to API reference.
+              </SectionHeading>
+            </div>
+            <div className="docs-card">
+              <div className="docs-icon"><BookOpen size={22} strokeWidth={1.8} /></div>
+              <div className="docs-card-copy">
+                <h3>Explore the Docs</h3>
+                <p className="docs-preview body-copy">
+                  From quick start guides to full API references - architecture deep-dives, configuration options, and everything needed to run CDCS in production.
+                </p>
+              </div>
+              <a className="button button-primary docs-button" href="#docs">
+                Continue Reading <ArrowRight size={17} />
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="site-footer reveal" id="footer" data-reveal>
+        <div className="container">
+          <div className="footer-top">
+            <div className="footer-brand-column">
+              <a className="brand footer-brand" href="#product" aria-label="CDCS home">
+                <span className="brand-wordmark">CDCS</span>
+              </a>
+              <p className="footer-tagline body-copy">Consistent Distributed Cache System</p>
+              <span className="version-tag">v0.1.0</span>
+            </div>
+            <div className="footer-links-column">
+              <p className="footer-heading">Product</p>
+              <div className="footer-link-grid">
+                <a href="#what-is-cdcs">Product</a>
+                <a href="#features">Features</a>
+                <a href="#architecture">Architecture</a>
+                <a href="#performance">Performance</a>
+                <a href="#dashboard">Dashboard</a>
+                <a href="#docs">Docs</a>
+                <a href="#footer">GitHub</a>
+              </div>
+            </div>
+            <div className="footer-links-column">
+              <p className="footer-heading">Connect</p>
+              <div className="footer-link-stack">
+                <a href="#footer">Email</a>
+                <a href={krishLinkedIn} target="_blank" rel="noreferrer">LinkedIn - Krish Bhattad</a>
+                <a href={omishaLinkedIn} target="_blank" rel="noreferrer">LinkedIn - Omisha Iyer</a>
+                <a href="#footer">GitHub</a>
+              </div>
+            </div>
+          </div>
+          <div className="footer-divider" />
+            <div className="footer-bottom">
+              <p className="body-copy">© CDCS - 2026. All rights reserved.</p>
+            <div className="footer-socials" aria-label="Social links">
+              <a href="#footer" aria-label="GitHub"><Github size={17} /></a>
+              <a href={krishLinkedIn} target="_blank" rel="noreferrer" aria-label="LinkedIn - Krish Bhattad"><Linkedin size={17} /></a>
+              <a href={omishaLinkedIn} target="_blank" rel="noreferrer" aria-label="LinkedIn - Omisha Iyer"><Linkedin size={17} /></a>
+              <a href="#footer" aria-label="Email"><Mail size={17} /></a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <button
+        type="button"
+        className={`back-to-top ${showBackToTop ? "is-visible" : ""}`}
+        aria-label="Back to top"
+        onClick={scrollToTop}
+      >
+        <ArrowUp size={17} />
+      </button>
+    </div>
+  );
+}
+
+export default Home;
