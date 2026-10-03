@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,15 +17,17 @@ import {
   ShieldCheck,
   X,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import ArchitectureDiagram from "./ArchitectureDiagram";
+import LineField from "./LineField";
 
 type Feature = {
   number: string;
   title: string;
   body: string;
   tag: string;
-  icon: typeof ShieldCheck;
+  icon: LucideIcon;
 };
 
 type Metric = {
@@ -155,7 +157,7 @@ function SectionHeading({
 }: {
   eyebrow?: string;
   title: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
   align?: "left" | "center";
 }) {
   return (
@@ -219,6 +221,7 @@ function Home() {
 
   return (
     <div className="cdcs-site">
+      <LineField />
       <header className={`site-nav ${scrolled ? "is-scrolled" : ""}`}>
         <div className="nav-shell">
           <a className="brand" href="#product" aria-label="CDCS home">
@@ -296,9 +299,7 @@ function Home() {
         <section className="features-section section-pad reveal" id="features" data-reveal>
           <div className="container">
             <div className="section-topline">
-              <SectionHeading
-                title="Key features / design decisions"
-              />
+              <SectionHeading title="Key features / design decisions" />
             </div>
             <div className="feature-grid">
               {features.map((feature) => {
@@ -324,9 +325,7 @@ function Home() {
         <section className="architecture-section section-pad reveal" id="architecture" data-reveal>
           <div className="container">
             <div className="section-topline architecture-heading-row">
-              <SectionHeading
-                title="How It Works"
-              >
+              <SectionHeading title="How It Works">
                 Built on proven distributed systems primitives, engineered for correctness.
               </SectionHeading>
             </div>
@@ -343,9 +342,7 @@ function Home() {
         <section className="metrics-section section-pad reveal" id="performance" data-reveal>
           <div className="container">
             <div className="section-topline">
-              <SectionHeading
-                title="Performance & Guarantees"
-              >
+              <SectionHeading title="Performance & Guarantees">
                 Numbers and properties that define how CDCS behaves under load.
               </SectionHeading>
             </div>
@@ -478,8 +475,8 @@ function Home() {
             </div>
           </div>
           <div className="footer-divider" />
-            <div className="footer-bottom">
-              <p className="body-copy">© CDCS - 2026. All rights reserved.</p>
+          <div className="footer-bottom">
+            <p className="body-copy">© CDCS - 2026. All rights reserved.</p>
             <div className="footer-socials" aria-label="Social links">
               <a href="#footer" aria-label="GitHub"><Github size={17} /></a>
               <a href={krishLinkedIn} target="_blank" rel="noreferrer" aria-label="LinkedIn - Krish Bhattad"><Linkedin size={17} /></a>

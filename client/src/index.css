@@ -1660,3 +1660,27 @@ button {
     animation: none;
   }
 }
+/* LineField: let the fixed canvas show through the page */
+.cdcs-site {
+  position: relative;
+  isolation: isolate;
+}
+
+.cdcs-site > main,
+.cdcs-site > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* the header is already position: fixed with z-index: 50, so leave it alone */
+
+.cdcs-site .hero,
+.cdcs-site .intro-section,
+.cdcs-site .features-section,
+.cdcs-site .architecture-section,
+.cdcs-site .metrics-section,
+.cdcs-site .dashboard-section,
+.cdcs-site .docs-section,
+.cdcs-site .site-footer {
+  background: transparent;
+}
