@@ -461,16 +461,15 @@ function Home() {
                 <a href="#performance">Performance</a>
                 <a href="#dashboard">Dashboard</a>
                 <a href="#docs">Docs</a>
-                <a href="#footer">GitHub</a>
               </div>
             </div>
             <div className="footer-links-column">
               <p className="footer-heading">Connect</p>
               <div className="footer-link-stack">
-                <a href="#footer">Email</a>
+                <a href="mailto:cdcs.off@gmail.com">Email</a>
                 <a href={krishLinkedIn} target="_blank" rel="noreferrer">LinkedIn - Krish Bhattad</a>
                 <a href={omishaLinkedIn} target="_blank" rel="noreferrer">LinkedIn - Omisha Iyer</a>
-                <a href="#footer">GitHub</a>
+                <a href="https://github.com/omisha123/CDCS" target="_blank" rel="noreferrer">GitHub</a>
               </div>
             </div>
           </div>
@@ -478,10 +477,10 @@ function Home() {
           <div className="footer-bottom">
             <p className="body-copy">© CDCS - 2026. All rights reserved.</p>
             <div className="footer-socials" aria-label="Social links">
-              <a href="#footer" aria-label="GitHub"><Github size={17} /></a>
+               <a href="https://github.com/omisha123/CDCS" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={17} /></a>
               <a href={krishLinkedIn} target="_blank" rel="noreferrer" aria-label="LinkedIn - Krish Bhattad"><Linkedin size={17} /></a>
               <a href={omishaLinkedIn} target="_blank" rel="noreferrer" aria-label="LinkedIn - Omisha Iyer"><Linkedin size={17} /></a>
-              <a href="#footer" aria-label="Email"><Mail size={17} /></a>
+              <a href="mailto:cdcs.off@gmail.com" aria-label="Email"><Mail size={17} /></a>
             </div>
           </div>
         </div>
